@@ -1,5 +1,6 @@
-use caps::{CapSet, Capability};
 use std::process::{Command, Stdio};
+
+use caps::{CapSet, Capability};
 
 pub type ExResult<T> = Result<T, Box<dyn std::error::Error + 'static>>;
 

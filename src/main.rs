@@ -1,37 +1,40 @@
-use clap::{Arg, App, AppSettings, Shell, SubCommand};
 use std::io;
+
+use clap::{App, AppSettings, Arg, Shell, SubCommand};
 
 fn build_cli() -> clap::App<'static, 'static> {
     App::new("vnet")
-            .version("0.1.0")
-            .setting(AppSettings::VersionlessSubcommands)
-            .setting(AppSettings::SubcommandRequired)
-            .global_setting(AppSettings::InferSubcommands)
-            .subcommand(SubCommand::with_name("completion")
-                        .about("Generate completion")
-                        .arg(Arg::with_name("SHELL")
-                             .required(true)
-                             .possible_values(&[
-                                  "bash",
-                                  "elvish",
-                                  "fish",
-                                  "powershell",
-                                  "zsh",
-                              ])))
-            .subcommand(SubCommand::with_name("tap")
-                        .about("Set up tap devices")
-                        .setting(AppSettings::SubcommandRequired)
-                        .subcommand(SubCommand::with_name("create")
-                                    .about("Create tap device")
-                                    .arg(Arg::with_name("NAME")
-                                         .required(true)))
-                        .subcommand(SubCommand::with_name("remove")
-                                    .about("Remove tap device")
-                                    .arg(Arg::with_name("NAME")
-                                         .required(true))))
-            .long_about(
-"This is a helper to set up networks for virtual machines. To work properly
-the program executable should be suid or has CAP_NET_ADMIN capability.")
+        .version("0.1.0")
+        .setting(AppSettings::VersionlessSubcommands)
+        .setting(AppSettings::SubcommandRequired)
+        .global_setting(AppSettings::InferSubcommands)
+        .subcommand(
+            SubCommand::with_name("completion")
+                .about("Generate completion")
+                .arg(Arg::with_name("SHELL").required(true).possible_values(
+                    &["bash", "elvish", "fish", "powershell", "zsh"],
+                )),
+        )
+        .subcommand(
+            SubCommand::with_name("tap")
+                .about("Set up tap devices")
+                .setting(AppSettings::SubcommandRequired)
+                .subcommand(
+                    SubCommand::with_name("create")
+                        .about("Create tap device")
+                        .arg(Arg::with_name("NAME").required(true)),
+                )
+                .subcommand(
+                    SubCommand::with_name("remove")
+                        .about("Remove tap device")
+                        .arg(Arg::with_name("NAME").required(true)),
+                ),
+        )
+        .long_about(
+            "This is a helper to set up networks for virtual machines. To \
+             work properly the program executable should be suid or has \
+             CAP_NET_ADMIN capability.",
+        )
 }
 
 fn print_completion(app: &mut App, shell: Shell) {
