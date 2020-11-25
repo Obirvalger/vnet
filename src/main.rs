@@ -28,6 +28,18 @@ fn build_cli() -> clap::App<'static, 'static> {
                     SubCommand::with_name("remove")
                         .about("Remove tap device")
                         .arg(Arg::with_name("NAME").required(true)),
+                )
+                .subcommand(
+                    SubCommand::with_name("add-address")
+                        .about("Add ip address to tap device")
+                        .arg(Arg::with_name("NAME").required(true))
+                        .arg(Arg::with_name("ADDRESS").required(true)),
+                )
+                .subcommand(
+                    SubCommand::with_name("del-address")
+                        .about("Delete ip address from tap device")
+                        .arg(Arg::with_name("NAME").required(true))
+                        .arg(Arg::with_name("ADDRESS").required(true)),
                 ),
         )
         .long_about(
@@ -37,41 +49,65 @@ fn build_cli() -> clap::App<'static, 'static> {
         )
 }
 
-fn print_completion(app: &mut App, shell: Shell) {
-    app.gen_completions_to("vnet", shell, &mut io::stdout());
+fn process_completion(matches: &clap::ArgMatches<'static>) {
+    fn print_completion(app: &mut App, shell: Shell) {
+        app.gen_completions_to("vnet", shell, &mut io::stdout());
+    }
+
+    let mut app = build_cli();
+    match matches.value_of("SHELL").unwrap() {
+        "bash" => print_completion(&mut app, Shell::Bash),
+        "elvish" => print_completion(&mut app, Shell::Elvish),
+        "fish" => print_completion(&mut app, Shell::Fish),
+        "powershell" => print_completion(&mut app, Shell::PowerShell),
+        "zsh" => print_completion(&mut app, Shell::Zsh),
+        _ => panic!("Unknown completion"),
+    };
+    std::process::exit(0);
+}
+
+fn process_tap(matches: &clap::ArgMatches<'static>) -> vnet::ExResult<()> {
+    if let Some(matches) = matches.subcommand_matches("create") {
+        let name = matches.value_of("NAME").unwrap();
+        if let Some(new_name) = vnet::create_tap(name)? {
+            println!("{}", new_name);
+        }
+    }
+    if let Some(matches) = matches.subcommand_matches("remove") {
+        let name = matches.value_of("NAME").unwrap();
+        if let Some(new_name) = vnet::remove_tap(name)? {
+            println!("{}", new_name);
+        }
+    }
+    if let Some(matches) = matches.subcommand_matches("add-address") {
+        let name = matches.value_of("NAME").unwrap();
+        let address = matches.value_of("ADDRESS").unwrap();
+        if let Some(new_address) = vnet::add_address_tap(name, address)? {
+            println!("{}", new_address);
+        }
+    }
+    if let Some(matches) = matches.subcommand_matches("del-address") {
+        let name = matches.value_of("NAME").unwrap();
+        let address = matches.value_of("ADDRESS").unwrap();
+        if let Some(new_address) = vnet::del_address_tap(name, address)? {
+            println!("{}", new_address);
+        }
+    }
+
+    Ok(())
 }
 
 fn main() -> vnet::ExResult<()> {
     let matches = build_cli().get_matches();
 
     if let Some(matches) = matches.subcommand_matches("completion") {
-        let mut app = build_cli();
-        match matches.value_of("SHELL").unwrap() {
-            "bash" => print_completion(&mut app, Shell::Bash),
-            "elvish" => print_completion(&mut app, Shell::Elvish),
-            "fish" => print_completion(&mut app, Shell::Fish),
-            "powershell" => print_completion(&mut app, Shell::PowerShell),
-            "zsh" => print_completion(&mut app, Shell::Zsh),
-            _ => panic!("Unknown completion"),
-        };
-        std::process::exit(0);
+        process_completion(matches);
     }
 
     vnet::set_ambient_cap()?;
 
     if let Some(matches) = matches.subcommand_matches("tap") {
-        if let Some(matches) = matches.subcommand_matches("create") {
-            let name = matches.value_of("NAME").unwrap();
-            if let Some(new_name) = vnet::create_tap(name)? {
-                println!("{}", new_name);
-            }
-        }
-        if let Some(matches) = matches.subcommand_matches("remove") {
-            let name = matches.value_of("NAME").unwrap();
-            if let Some(new_name) = vnet::remove_tap(name)? {
-                println!("{}", new_name);
-            }
-        }
+        process_tap(matches)?;
     }
 
     Ok(())

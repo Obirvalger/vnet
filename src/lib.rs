@@ -1,3 +1,5 @@
+use std::os::unix::process::ExitStatusExt;
+use std::process::ExitStatus;
 use std::process::{Command, Stdio};
 
 use caps::{CapSet, Capability};
@@ -75,4 +77,76 @@ pub fn remove_tap(raw_name: &str) -> ExResult<Option<String>> {
     }
 
     Ok(None)
+}
+
+fn process_status(status: ExitStatus, cmd: &[&str]) -> ExResult<()> {
+    if !status.success() {
+        let reason: String;
+
+        if let Some(code) = status.code() {
+            reason = format!("with return code {}", code);
+        } else {
+            let signal = status.signal().expect(
+                "process terminated not with retutn code nor by a signal",
+            );
+            reason = format!("by signal {}", signal);
+        }
+
+        let msg = format!("command {} was failded {}", cmd.join(" "), reason);
+        return Err(msg.into());
+    }
+
+    Ok(())
+}
+
+fn check_call(cmd: &[&str]) -> ExResult<()> {
+    let status = Command::new(cmd[0])
+        .args(&cmd[1..])
+        .stdout(Stdio::null())
+        .stderr(Stdio::null())
+        .status()?;
+
+    process_status(status, &cmd)
+}
+
+fn get_stdout(cmd: &[&str]) -> ExResult<String> {
+    let output = Command::new(cmd[0]).args(&cmd[1..]).output()?;
+
+    process_status(output.status, &cmd)?;
+
+    let stdout = String::from_utf8(output.stdout)?;
+    return Ok(stdout);
+}
+
+fn exists_address(name: &str, address: &str) -> ExResult<bool> {
+    let stdout = get_stdout(&["ip", "-o", "address", "show", "dev", &name])?;
+    Ok(stdout.contains(address))
+}
+
+pub fn add_address_tap(
+    raw_name: &str,
+    address: &str,
+) -> ExResult<Option<String>> {
+    let name = prefix_name(raw_name);
+
+    if exists_address(&name, address)? {
+        Ok(None)
+    } else {
+        check_call(&["ip", "address", "add", address, "dev", &name])?;
+        Ok(Some(String::from(address)))
+    }
+}
+
+pub fn del_address_tap(
+    raw_name: &str,
+    address: &str,
+) -> ExResult<Option<String>> {
+    let name = prefix_name(raw_name);
+
+    if !exists_address(&name, address)? {
+        Ok(None)
+    } else {
+        check_call(&["ip", "address", "del", address, "dev", &name])?;
+        Ok(Some(String::from(address)))
+    }
 }
