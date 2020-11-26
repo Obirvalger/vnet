@@ -42,3 +42,25 @@ pub fn get_output(cmd: &[&str]) -> ExResult<String> {
     let stdout = String::from_utf8(output.stdout)?;
     return Ok(stdout);
 }
+
+pub fn get_code(cmd: &[&str]) -> ExResult<i32> {
+    let output = Command::new(cmd[0]).args(&cmd[1..]).output()?;
+
+    if let Some(code) = output.status.code() {
+        return Ok(code);
+    } else {
+        let signal = output
+            .status
+            .signal()
+            .expect("process terminated not with retutn code nor by a signal");
+        let msg = format!(
+            "command {} terminated by signal {}",
+            cmd.join(" "),
+            signal
+        );
+        return Err(Box::new(std::io::Error::new(
+            std::io::ErrorKind::Other,
+            msg,
+        )));
+    }
+}

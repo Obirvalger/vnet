@@ -1,22 +1,15 @@
-use std::process::{Command, Stdio};
-
 use crate::cmd;
 use crate::device::prefix_name;
 use crate::errors::ExResult;
 
-pub fn exists_tap(name: &str) -> bool {
-    Command::new("ip")
-        .args(&["link", "show", name])
-        .stdout(Stdio::null())
-        .stderr(Stdio::null())
-        .status()
-        .expect("ip link show failed")
-        .success()
+pub fn exists_tap(name: &str) -> ExResult<bool> {
+    let code = cmd::get_code(&["ip", "link", "show", name])?;
+    Ok(code == 0)
 }
 
 pub fn create_tap(raw_name: &str) -> ExResult<Option<String>> {
     let name = prefix_name(raw_name);
-    if !exists_tap(&name) {
+    if !exists_tap(&name)? {
         cmd::check_call(&["ip", "tuntap", "add", &name, "mode", "tap"])?;
         return Ok(Some(name));
     }
@@ -26,7 +19,7 @@ pub fn create_tap(raw_name: &str) -> ExResult<Option<String>> {
 
 pub fn remove_tap(raw_name: &str) -> ExResult<Option<String>> {
     let name = prefix_name(raw_name);
-    if exists_tap(&name) {
+    if exists_tap(&name)? {
         cmd::check_call(&["ip", "tuntap", "del", &name, "mode", "tap"])?;
         return Ok(Some(name));
     }
