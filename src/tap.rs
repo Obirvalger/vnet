@@ -14,42 +14,10 @@ pub fn exists_tap(name: &str) -> bool {
         .success()
 }
 
-fn add_tap(name: &str) -> ExResult<()> {
-    let err_msg = "ip tuntap add failed";
-
-    let status = Command::new("ip")
-        .args(&["tuntap", "add", name, "mode", "tap"])
-        .stdout(Stdio::null())
-        .stderr(Stdio::null())
-        .status()?;
-
-    if !status.success() {
-        return Err(err_msg.into());
-    }
-
-    Ok(())
-}
-
-fn del_tap(name: &str) -> ExResult<()> {
-    let err_msg = "ip tuntap del failed";
-
-    let status = Command::new("ip")
-        .args(&["tuntap", "del", name, "mode", "tap"])
-        .stdout(Stdio::null())
-        .stderr(Stdio::null())
-        .status()?;
-
-    if !status.success() {
-        return Err(err_msg.into());
-    }
-
-    Ok(())
-}
-
 pub fn create_tap(raw_name: &str) -> ExResult<Option<String>> {
     let name = prefix_name(raw_name);
     if !exists_tap(&name) {
-        add_tap(&name)?;
+        cmd::check_call(&["ip", "tuntap", "add", &name, "mode", "tap"])?;
         return Ok(Some(name));
     }
 
@@ -59,7 +27,7 @@ pub fn create_tap(raw_name: &str) -> ExResult<Option<String>> {
 pub fn remove_tap(raw_name: &str) -> ExResult<Option<String>> {
     let name = prefix_name(raw_name);
     if exists_tap(&name) {
-        del_tap(&name)?;
+        cmd::check_call(&["ip", "tuntap", "del", &name, "mode", "tap"])?;
         return Ok(Some(name));
     }
 
