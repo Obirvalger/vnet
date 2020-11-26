@@ -69,27 +69,27 @@ fn process_completion(matches: &clap::ArgMatches<'static>) {
 fn process_tap(matches: &clap::ArgMatches<'static>) -> vnet::ExResult<()> {
     if let Some(matches) = matches.subcommand_matches("create") {
         let name = matches.value_of("NAME").unwrap();
-        if let Some(new_name) = vnet::create_tap(name)? {
+        if let Some(new_name) = vnet::tap::create_tap(name)? {
             println!("{}", new_name);
         }
     }
     if let Some(matches) = matches.subcommand_matches("remove") {
         let name = matches.value_of("NAME").unwrap();
-        if let Some(new_name) = vnet::remove_tap(name)? {
+        if let Some(new_name) = vnet::tap::remove_tap(name)? {
             println!("{}", new_name);
         }
     }
     if let Some(matches) = matches.subcommand_matches("add-address") {
         let name = matches.value_of("NAME").unwrap();
         let address = matches.value_of("ADDRESS").unwrap();
-        if let Some(new_address) = vnet::add_address_tap(name, address)? {
+        if let Some(new_address) = vnet::tap::add_address_tap(name, address)? {
             println!("{}", new_address);
         }
     }
     if let Some(matches) = matches.subcommand_matches("del-address") {
         let name = matches.value_of("NAME").unwrap();
         let address = matches.value_of("ADDRESS").unwrap();
-        if let Some(new_address) = vnet::del_address_tap(name, address)? {
+        if let Some(new_address) = vnet::tap::del_address_tap(name, address)? {
             println!("{}", new_address);
         }
     }
