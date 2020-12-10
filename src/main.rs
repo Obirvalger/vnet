@@ -66,7 +66,7 @@ fn process_completion(matches: &clap::ArgMatches<'static>) {
     std::process::exit(0);
 }
 
-fn process_tap(matches: &clap::ArgMatches<'static>) -> vnet::ExResult<()> {
+fn process_tap(matches: &clap::ArgMatches<'static>) -> vnet::Result<()> {
     if let Some(matches) = matches.subcommand_matches("create") {
         let name = matches.value_of("NAME").unwrap();
         if let Some(new_name) = vnet::tap::create_tap(name)? {
@@ -97,7 +97,7 @@ fn process_tap(matches: &clap::ArgMatches<'static>) -> vnet::ExResult<()> {
     Ok(())
 }
 
-fn main() -> vnet::ExResult<()> {
+fn main() -> vnet::Result<()> {
     let matches = build_cli().get_matches();
 
     if let Some(matches) = matches.subcommand_matches("completion") {

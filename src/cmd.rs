@@ -2,9 +2,9 @@ use std::os::unix::process::ExitStatusExt;
 use std::process::ExitStatus;
 use std::process::{Command, Stdio};
 
-use crate::errors::ExResult;
+use crate::Result;
 
-pub fn process_status(status: ExitStatus, cmd: &[&str]) -> ExResult<()> {
+pub fn process_status(status: ExitStatus, cmd: &[&str]) -> Result<()> {
     if !status.success() {
         let reason: String;
 
@@ -24,7 +24,7 @@ pub fn process_status(status: ExitStatus, cmd: &[&str]) -> ExResult<()> {
     Ok(())
 }
 
-pub fn check_call(cmd: &[&str]) -> ExResult<()> {
+pub fn check_call(cmd: &[&str]) -> Result<()> {
     let status = Command::new(cmd[0])
         .args(&cmd[1..])
         .stdout(Stdio::null())
@@ -34,7 +34,7 @@ pub fn check_call(cmd: &[&str]) -> ExResult<()> {
     process_status(status, &cmd)
 }
 
-pub fn get_output(cmd: &[&str]) -> ExResult<String> {
+pub fn get_output(cmd: &[&str]) -> Result<String> {
     let output = Command::new(cmd[0]).args(&cmd[1..]).output()?;
 
     process_status(output.status, &cmd)?;
@@ -43,7 +43,7 @@ pub fn get_output(cmd: &[&str]) -> ExResult<String> {
     return Ok(stdout);
 }
 
-pub fn get_code(cmd: &[&str]) -> ExResult<i32> {
+pub fn get_code(cmd: &[&str]) -> Result<i32> {
     let output = Command::new(cmd[0]).args(&cmd[1..]).output()?;
 
     if let Some(code) = output.status.code() {

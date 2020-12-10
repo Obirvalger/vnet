@@ -1,13 +1,13 @@
 use crate::cmd;
 use crate::device::prefix_name;
-use crate::errors::ExResult;
+use crate::Result;
 
-pub fn exists_tap(name: &str) -> ExResult<bool> {
+pub fn exists_tap(name: &str) -> Result<bool> {
     let code = cmd::get_code(&["ip", "link", "show", name])?;
     Ok(code == 0)
 }
 
-pub fn create_tap(raw_name: &str) -> ExResult<Option<String>> {
+pub fn create_tap(raw_name: &str) -> Result<Option<String>> {
     let name = prefix_name(raw_name);
     if !exists_tap(&name)? {
         cmd::check_call(&["ip", "tuntap", "add", &name, "mode", "tap"])?;
@@ -17,7 +17,7 @@ pub fn create_tap(raw_name: &str) -> ExResult<Option<String>> {
     Ok(None)
 }
 
-pub fn remove_tap(raw_name: &str) -> ExResult<Option<String>> {
+pub fn remove_tap(raw_name: &str) -> Result<Option<String>> {
     let name = prefix_name(raw_name);
     if exists_tap(&name)? {
         cmd::check_call(&["ip", "tuntap", "del", &name, "mode", "tap"])?;
@@ -27,7 +27,7 @@ pub fn remove_tap(raw_name: &str) -> ExResult<Option<String>> {
     Ok(None)
 }
 
-fn exists_address(name: &str, address: &str) -> ExResult<bool> {
+fn exists_address(name: &str, address: &str) -> Result<bool> {
     let stdout =
         cmd::get_output(&["ip", "-o", "address", "show", "dev", &name])?;
     Ok(stdout.contains(address))
@@ -36,7 +36,7 @@ fn exists_address(name: &str, address: &str) -> ExResult<bool> {
 pub fn add_address_tap(
     raw_name: &str,
     address: &str,
-) -> ExResult<Option<String>> {
+) -> Result<Option<String>> {
     let name = prefix_name(raw_name);
 
     if exists_address(&name, address)? {
@@ -50,7 +50,7 @@ pub fn add_address_tap(
 pub fn del_address_tap(
     raw_name: &str,
     address: &str,
-) -> ExResult<Option<String>> {
+) -> Result<Option<String>> {
     let name = prefix_name(raw_name);
 
     if !exists_address(&name, address)? {
